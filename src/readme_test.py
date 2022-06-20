@@ -23,12 +23,12 @@ import sassyjson
 
 @dataclass
 class MyNestedClass:
-    message: str = ""
+    message: str
 
 @dataclass
 class MyCustomClass:
-    timestamp: datetime = None
-    nested_message: MyNestedClass = None
+    timestamp: datetime
+    nested_message: MyNestedClass
 
 
 def test_Should_convert_to_expected_json_When_example_class_is_given():

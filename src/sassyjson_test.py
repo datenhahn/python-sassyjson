@@ -33,14 +33,6 @@ class LevelTwo:
     level_three: LevelThree = None
     second_string: str = ""
 
-
-@dataclass
-class TopLevel:
-    some_date: datetime = None
-    some_string: str = ""
-    level_two: LevelTwo = None
-
-
 @dataclass
 class NoDefaultConstructor:
     some_other_string: str = ""
@@ -48,8 +40,8 @@ class NoDefaultConstructor:
 
 @dataclass
 class TopLevel:
+    some_string: str
     some_date: datetime = None
-    some_string: str = ""
     level_two: LevelTwo = None
 
 
@@ -60,6 +52,22 @@ class TopLevelFaulty:
     some_string: str = ""
     level_two: LevelTwo = None
 
+class SecondLevelNormal:
+    some_str : str
+
+class TopLevelNormal:
+    second_level : SecondLevelNormal
+    date : datetime
+    some_toplevel_str : str
+
+    def other(self, some_arg):
+        return "foo"
+
+second_level_normal = SecondLevelNormal()
+second_level_normal.some_str = "some second level str"
+TOP_LEVEL_NORMAL_TEST_CLASS = TopLevelNormal()
+TOP_LEVEL_NORMAL_TEST_CLASS.second_level = second_level_normal
+TOP_LEVEL_NORMAL_TEST_CLASS.some_toplevel_str = "some toplevel str"
 
 TOP_LEVEL_TEST_CLASS = TopLevel(
     level_two=LevelTwo(
@@ -95,19 +103,32 @@ def test_Should_convert_json_string_to_class_When_string_is_given():
 
 def test_Should_raise_exception_When_some_parameters_are_omitted():
     # GIVEN: A json string which resembles a serialized complex python class, missing some attributes of the class.
-    input = '{"level_two": {"level_three": {"some_integer": 123}, "second_string": "but also here"}, "some_date": "2022-06-17T00:00:00.000000", "some_string": "a string"}'
+    input = '{"second_level": {"some_str": "some second level str"}, "some_toplevel_str": "some toplevel str"}'
 
     # WHEN: The json is unmarshalled into the corresponding python class.
     # THEN: An attribute error should be raised.
     with pytest.raises(sassyjson.SassyJsonMissingAttributeError):
-        sassyjson.from_json(input, TopLevel)
+        sassyjson.from_json(input, TopLevelNormal)
 
 
 def test_Should_raise_exception_When_class_without_default_constructor_is_given():
     # GIVEN: A json string which resembles a serialized complex python class.
-    input = '{"level_two": {"level_three": {"other_string": "a string", "some_integer": 123}, "second_string": "but also here"}, "some_date": "2022-06-17T00:00:00.000000", "some_string": "a string"}'
+    input = '{"level_two": {"level_three": {"other_string": "a string", "some_integer": 123}, "second_string": "but also here"}, "no_default_def": {"some_other_string": "insert string here"}, "some_date": "2022-06-17T00:00:00.000000", "some_string": "a string"}'
 
-    # WHEN: A class is given which does not have a default constructor (itself or one of the nested classes).
-    # THEN: A no default constructor error should be raised.
-    with pytest.raises(sassyjson.SassyJsonNoDefaultConstructorError):
-        sassyjson.from_json(input, TopLevelFaulty)
+    # WHEN: The json is unmarshalled into the corresponding python class.
+    output = sassyjson.from_json(input, TopLevelFaulty)
+
+    # THEN: After marshalling the python instance again to a json string, the new string must match the initial string.
+    assert sassyjson.to_json(output) == input
+
+def test_Should_convert_correctly_When_regular_class_with_default_constructor_is_given():
+
+    # GIVEN: A json string which resembles a serialized complex python class.
+    input = '{"date": "2022-06-17T00:00:00.000000", "second_level": {"some_str": "some second level str"}, "some_toplevel_str": "some toplevel str"}'
+
+    # WHEN: The json is unmarshalled into the corresponding python class.
+    output =sassyjson.from_json(input, TopLevelNormal)
+
+    # THEN: After marshalling the python instance again to a json string, the new string must match the initial string.
+    assert sassyjson.to_json(output) == input
+

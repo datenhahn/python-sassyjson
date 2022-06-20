@@ -13,12 +13,12 @@ pip install
 ```python
 @dataclass
 class MyNestedClass:
-    message: str = ""
+    message: str
 
 @dataclass
 class MyCustomClass:
-    timestamp: datetime = None
-    nested_message: MyNestedClass = None
+    timestamp: datetime
+    nested_message: MyNestedClass
 
  
 my_instance = MyCustomClass(timestamp=datetime(2022,6,17),
